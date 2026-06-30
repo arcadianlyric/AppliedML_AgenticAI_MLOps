@@ -46,6 +46,7 @@ This portfolio demonstrates end-to-end ownership across that lifecycle, with sta
 | [LFR Data Monitor](https://github.com/arcadianlyric/LFR_DataMonitor) | Yes |  | Yes | Sequencing QC and drift detection before model degradation becomes silent |
 | [Google DeepVariant Fine-Tuning](https://github.com/arcadianlyric/GoogleDeepVariant_FineTuning) | Yes |  | Yes | Detect -> retrain -> validate pattern for shifted sequencing distributions |
 | [PhasedVariants AgenticCurator](https://github.com/arcadianlyric/PhasedVariants_AgenticCurator) | Yes | Yes | Yes | RAG + KG + dual-agent review for grounded variant interpretation |
+| [AgenticEval](https://github.com/arcadianlyric/AgenticEval) |  | Yes | Yes | Reusable eval framework for agent traces: tool accuracy, hallucination rate, stop-decision quality, 5-dim scoring |
 | [Agentic bioArchitect](https://github.com/arcadianlyric/Agentic_bioArchitect) | Yes | Yes | Yes | Multi-agent design and implementation of bioinformatics pipelines |
 | [ZeroShot Immune Feature Drift](https://github.com/arcadianlyric/ZeroShot_ImmuneFeatureDrift) | Yes |  | Yes | Foundation model embedding drift for longitudinal immune monitoring |
 | [AgenticGEM DataDrift AutoRetrainer](https://github.com/arcadianlyric/AgenticGEM_DataDrift_AutoRetrainer) |  | Yes | Yes | LangGraph monitor -> evaluate -> retrain loop for ads ranking drift |
@@ -61,7 +62,7 @@ This portfolio demonstrates end-to-end ownership across that lifecycle, with sta
 |---|---|---|
 | Multi-step error compounding | A 95% reliable step becomes unreliable across long chains | AgenticCurator review loop; bioArchitect researcher -> analyst -> reviewer workflow |
 | Tool-use unreliability | Agents hallucinate parameters, call tools in the wrong order, or miss failures | Structured retrieval wrappers, explicit tool outputs, cross-model review |
-| Evaluation gap | Teams cannot deploy agents without measurable quality gates | Five-dimension scoring rubric in AgenticCurator; automated tests in AgenticGEM |
+| Evaluation gap | Teams cannot deploy agents without measurable quality gates | **AgenticEval** deterministic trace evaluator; five-dimension scoring rubric in AgenticCurator; automated tests in AgenticGEM |
 | Observability blindness | Failures are hard to debug without traces, metrics, and lineage | MLOps Taxi monitoring stack; LFR drift feature matrices; Prometheus metrics in AgenticGEM |
 | Context degradation | Long sessions and poor retrieval cause agents to reason from weak context | FAISS grounding, knowledge graph context, progressive literature search |
 | Human-in-the-loop design | Agents either over-ask humans or continue when they should stop | Quality thresholds, revise/stop logic, escalation decisions |
@@ -82,6 +83,7 @@ flowchart TD
 
     subgraph AGENT["Agentic AI Layer"]
         CUR["PhasedVariants AgenticCurator<br/>RAG · PrimeKG · FAISS · dual-agent review"]
+        EVAL["AgenticEval<br/>tool accuracy · hallucination rate · stop quality · 5-dim scores"]
         BIO["Agentic bioArchitect<br/>research agents · reviewer agents · Snakemake generation"]
         GEM["AgenticGEM<br/>LangGraph drift monitor -> evaluator -> retrainer"]
         GRAG["ColdStart GraphRAG<br/>multimodal retrieval · graph reasoning"]
@@ -97,6 +99,7 @@ flowchart TD
     DV --> WGS
     WGS --> CUR
     WGS --> IMM
+    CUR --> EVAL
     CUR --> BIO
     GEM --> OBS
     TAXI --> OBS
@@ -133,6 +136,7 @@ Together, these projects represent the production substrate: data quality, model
 The agentic biomedical projects focus on constrained automation rather than unconstrained chat.
 
 - **PhasedVariants AgenticCurator** automates interpretation of phased variants using RAG, PrimeKG, VEP annotations, literature retrieval, FAISS grounding, and dual-agent review.
+- **AgenticEval** abstracts the evaluation layer from AgenticCurator into a reusable framework. Any agent trace—from LangGraph, CrewAI, or custom Python loops—can be scored for tool accuracy, hallucination rate, stop-decision quality, and a five-dimension rubric, enabling CI-gated regression testing across projects.
 - **Agentic bioArchitect** uses multi-agent collaboration to design and implement bioinformatics pipelines, with reviewer agents and score thresholds controlling whether the workflow proceeds or iterates.
 
 These systems address the hard parts of agent deployment: evidence grounding, tool reliability, hallucination detection, review loops, and explicit stopping criteria.

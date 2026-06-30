@@ -50,6 +50,7 @@ Domain data -> ML pipeline -> monitoring -> drift decision -> retraining / fallb
 | [LFR Data Monitor](https://github.com/arcadianlyric/LFR_DataMonitor) | Yes |  | Yes | 测序 QC 与漂移检测，在模型静默退化前发出信号 |
 | [Google DeepVariant Fine-Tuning](https://github.com/arcadianlyric/GoogleDeepVariant_FineTuning) | Yes |  | Yes | 面向测序分布变化的 detect -> retrain -> validate 闭环 |
 | [PhasedVariants AgenticCurator](https://github.com/arcadianlyric/PhasedVariants_AgenticCurator) | Yes | Yes | Yes | RAG + KG + 双 agent review 的变异解读系统 |
+| [AgenticEval](https://github.com/arcadianlyric/AgenticEval) |  | Yes | Yes | 通用 agent trace 评估框架：工具准确率、幻觉率、停止决策质量、五维评分 |
 | [Agentic bioArchitect](https://github.com/arcadianlyric/Agentic_bioArchitect) | Yes | Yes | Yes | 多 agent 设计并生成生信 pipeline，带 reviewer 与质量门控 |
 | [ZeroShot Immune Feature Drift](https://github.com/arcadianlyric/ZeroShot_ImmuneFeatureDrift) | Yes |  | Yes | 用 foundation model embedding 监控纵向免疫漂移 |
 | [AgenticGEM DataDrift AutoRetrainer](https://github.com/arcadianlyric/AgenticGEM_DataDrift_AutoRetrainer) |  | Yes | Yes | LangGraph monitor -> evaluate -> retrain 广告排序漂移闭环 |
@@ -65,7 +66,7 @@ Domain data -> ML pipeline -> monitoring -> drift decision -> retraining / fallb
 |---|---|---|
 | 多步错误累积 | 单步 95% 准确率在长链路中会快速下降 | AgenticCurator review loop；bioArchitect researcher -> analyst -> reviewer 流程 |
 | 工具调用不可靠 | Agent 可能 hallucinate 参数、调用顺序错误、或忽略 silent failure | 结构化 tool wrapper、显式 tool output、cross-model review |
-| 评估缺口 | 没有质量指标就无法稳定部署 agent | AgenticCurator 五维评分；AgenticGEM 自动化测试 |
+| 评估缺口 | 没有质量指标就无法稳定部署 agent | **AgenticEval** 确定性 trace 评估框架；AgenticCurator 五维评分；AgenticGEM 自动化测试 |
 | 可观测性缺失 | 无法追踪长流程中是哪一步造成失败 | MLOps Taxi monitoring stack；LFR drift feature matrix；AgenticGEM Prometheus metrics |
 | 上下文退化 | 长会话和弱检索会让 agent 基于错误 context 推理 | FAISS grounding、knowledge graph context、progressive literature search |
 | Human-in-the-loop 设计 | Agent 既不能过度打扰人，也不能在该停止时继续自动化 | 质量阈值、revise/stop 逻辑、escalation decision |
@@ -86,6 +87,7 @@ flowchart TD
 
     subgraph AGENT["Agentic AI Layer"]
         CUR["PhasedVariants AgenticCurator<br/>RAG · PrimeKG · FAISS · dual-agent review"]
+        EVAL["AgenticEval<br/>tool accuracy · hallucination rate · stop quality · 5-dim scores"]
         BIO["Agentic bioArchitect<br/>research agents · reviewer agents · Snakemake generation"]
         GEM["AgenticGEM<br/>LangGraph drift monitor -> evaluator -> retrainer"]
         GRAG["ColdStart GraphRAG<br/>multimodal retrieval · graph reasoning"]
@@ -101,6 +103,7 @@ flowchart TD
     DV --> WGS
     WGS --> CUR
     WGS --> IMM
+    CUR --> EVAL
     CUR --> BIO
     GEM --> OBS
     TAXI --> OBS
@@ -137,6 +140,7 @@ flowchart TD
 这些 agentic biomedical 项目强调的是有约束的自动化，而不是开放式聊天。
 
 - **PhasedVariants AgenticCurator**：使用 RAG、PrimeKG、VEP annotation、literature retrieval、FAISS grounding 和 dual-agent review 自动化 phased variant interpretation。
+- **AgenticEval**：从 AgenticCurator 中抽象出通用 agent 评估层。任意 agent trace（LangGraph、CrewAI、自定义 Python 循环）均可输入，输出工具准确率、幻觉率、停止决策质量和五维评分，支持 CI 回归测试门控。
 - **Agentic bioArchitect**：使用多 agent 协作完成生信 pipeline 的研究、设计和实现，并通过 reviewer agent 和 score threshold 控制是否进入下一步或继续迭代。
 
 这些系统聚焦 agent 部署中的关键难题：证据 grounding、工具可靠性、hallucination 检测、review loop、显式停止条件和 human-in-the-loop。
