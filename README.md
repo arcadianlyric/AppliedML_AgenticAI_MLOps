@@ -10,6 +10,8 @@ My work sits at the intersection of three factors:
 
 The unifying theme is not simply building models or agents. It is building working agentic loops that can survive real production conditions: noisy data, model drift, long-running workflows, unreliable tool calls, audit requirements, and the need to decide when automation should stop and ask for human review.
 
+![Portfolio Overview](img/readme.png)
+
 ## Two Core Signals
 
 1. **Implemented production-style agentic closed loops**: monitor -> evaluate -> decide -> act -> validate. These loops appear in biomedical variant interpretation, bioinformatics pipeline design, sequencing drift response, and ads-ranking retraining.
@@ -47,7 +49,7 @@ This portfolio demonstrates end-to-end ownership across that lifecycle, with sta
 | [Agentic bioArchitect](https://github.com/arcadianlyric/Agentic_bioArchitect) | Yes | Yes | Yes | Multi-agent design and implementation of bioinformatics pipelines |
 | [ZeroShot Immune Feature Drift](https://github.com/arcadianlyric/ZeroShot_ImmuneFeatureDrift) | Yes |  | Yes | Foundation model embedding drift for longitudinal immune monitoring |
 | [AgenticGEM DataDrift AutoRetrainer](https://github.com/arcadianlyric/AgenticGEM_DataDrift_AutoRetrainer) |  | Yes | Yes | LangGraph monitor -> evaluate -> retrain loop for ads ranking drift |
-| [MLOps Taxi](https://github.com/arcadianlyric/MLops_taxi) |  |  | Yes | Full production ML platform with TFX, Feast, MLflow, Kafka, and observability |
+| [MLOps Taxi Platform](https://github.com/arcadianlyric/Agentic_MLOps_Platform) |  |  | Yes | Full production ML platform with TFX, Feast, MLflow, Kafka, and observability |
 | [RS ColdStart GraphRAG LLM](https://github.com/arcadianlyric/RS_coldstart_graphRAG_LLM) |  | Yes | Yes | Multimodal GraphRAG for cold-start recommendation |
 | [Movie RecSys](https://github.com/arcadianlyric/RS_movies) |  |  | Yes | Hybrid recommendation stack with offline, nearline, and online serving layers |
 
