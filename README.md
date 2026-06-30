@@ -10,7 +10,7 @@ My work sits at the intersection of three factors:
 
 The unifying theme is not simply building models or agents. It is building working agentic loops that can survive real production conditions: noisy data, model drift, long-running workflows, unreliable tool calls, audit requirements, and the need to decide when automation should stop and ask for human review.
 
-<img src="img/readme.png" width="600" alt="Portfolio Overview"/>
+<img src="img/readme.png" width="400" alt="Portfolio Overview"/>
 
 ## Two Core Signals
 
