@@ -4,9 +4,10 @@
 
 My work sits at the intersection of three factors:
 
-1. **Biomedical domain knowledge**: genomics, variant calling, phasing, sequencing QC, immune aging, and clinical interpretation.
-2. **Agentic AI**: multi-agent orchestration, RAG, tool use, reflection loops, evaluator agents, and human-in-the-loop quality gates.
-3. **MLOps**: production pipelines, monitoring, drift detection, model retraining, serving, observability, and deployment.
+
+1. **Agentic AI**: multi-agent orchestration, RAG, tool use, reflection loops, evaluator agents, and human-in-the-loop quality gates.
+2. **MLOps**: production ML pipelines, monitoring, drift detection, model retraining, serving, observability, and deployment.
+3. **Biomedical domain knowledge**: genomics, variant calling, phasing, sequencing QC, immune aging, and clinical interpretation.
 
 The unifying theme is not simply building models or agents. It is building working agentic loops that can survive real production conditions: noisy data, model drift, long-running workflows, unreliable tool calls, audit requirements, and the need to decide when automation should stop and ask for human review.
 
@@ -45,14 +46,17 @@ This portfolio demonstrates end-to-end ownership across that lifecycle, with sta
 | [DNBSEQ Complete WGS Pipeline](https://github.com/Complete-Genomics/DNBSEQ_Complete_WGS) | Yes |  | Yes | Production genomics pipeline with auditable, reproducible WGS analysis |
 | [LFR Data Monitor](https://github.com/arcadianlyric/LFR_DataMonitor) | Yes |  | Yes | Sequencing QC and drift detection before model degradation becomes silent |
 | [Google DeepVariant Fine-Tuning](https://github.com/arcadianlyric/GoogleDeepVariant_FineTuning) | Yes |  | Yes | Detect -> retrain -> validate pattern for shifted sequencing distributions |
-| [PhasedVariants AgenticCurator](https://github.com/arcadianlyric/PhasedVariants_AgenticCurator) | Yes | Yes | Yes | RAG + KG + dual-agent review for grounded variant interpretation |
+| [PhasedVariants AgenticCurator](https://github.com/arcadianlyric/PhasedVariants_AgenticCurator) | Yes | Yes | Yes | Three-agent sprint harness with external-evidence evaluation (ClinGen/ClinVar) and deterministic scoring for grounded variant interpretation |
 | [AgenticEval](https://github.com/arcadianlyric/AgenticEval) |  | Yes | Yes | Reusable eval framework for agent traces: tool accuracy, hallucination rate, stop-decision quality, 5-dim scoring |
 | [Agentic bioArchitect](https://github.com/arcadianlyric/Agentic_bioArchitect) | Yes | Yes | Yes | Multi-agent design and implementation of bioinformatics pipelines |
 | [ZeroShot Immune Feature Drift](https://github.com/arcadianlyric/ZeroShot_ImmuneFeatureDrift) | Yes |  | Yes | Foundation model embedding drift for longitudinal immune monitoring |
+| [denovo_OLC](https://github.com/Complete-Genomics/cLFR_denovo_OLC) | Yes |  | Yes | Evidence-aware per-UMI assembly; rule-vs-ML-vs-shadow-model production decision with six rejected model-in-the-loop paths |
+| [cLFR_VCpolish](https://github.com/Complete-Genomics/cLFR_SNVpolish) | Yes |  | Yes | LightGBM molecule-linkage confidence scoring for post-consensus SNV polish, shipped canary-gated |
 | [AgenticGEM DataDrift AutoRetrainer](https://github.com/arcadianlyric/AgenticGEM_DataDrift_AutoRetrainer) |  | Yes | Yes | LangGraph monitor -> evaluate -> retrain loop for ads ranking drift |
 | [MLOps Taxi Platform](https://github.com/arcadianlyric/Agentic_MLOps_Platform) |  |  | Yes | Full production ML platform with TFX, Feast, MLflow, Kafka, and observability |
 | [RS ColdStart GraphRAG LLM](https://github.com/arcadianlyric/RS_coldstart_graphRAG_LLM) |  | Yes | Yes | Multimodal GraphRAG for cold-start recommendation |
 | [Movie RecSys](https://github.com/arcadianlyric/RS_movies) |  |  | Yes | Hybrid recommendation stack with offline, nearline, and online serving layers |
+| [RecSys_OBD](https://github.com/arcadianlyric/RecSys_OBD) |  |  | Yes | Off-policy evaluation benchmark: data-scale-dependent estimator selection and a falsifiable causal boundary for position-bias correction |
 
 ---
 
@@ -62,11 +66,11 @@ This portfolio demonstrates end-to-end ownership across that lifecycle, with sta
 |---|---|---|
 | Multi-step error compounding | A 95% reliable step becomes unreliable across long chains | AgenticCurator review loop; bioArchitect researcher -> analyst -> reviewer workflow |
 | Tool-use unreliability | Agents hallucinate parameters, call tools in the wrong order, or miss failures | Structured retrieval wrappers, explicit tool outputs, cross-model review |
-| Evaluation gap | Teams cannot deploy agents without measurable quality gates | **AgenticEval** deterministic trace evaluator; five-dimension scoring rubric in AgenticCurator; automated tests in AgenticGEM |
-| Observability blindness | Failures are hard to debug without traces, metrics, and lineage | MLOps Taxi monitoring stack; LFR drift feature matrices; Prometheus metrics in AgenticGEM |
+| Evaluation gap | Teams cannot deploy agents without measurable quality gates | **AgenticEval** deterministic trace evaluator; AgenticCurator's external-evidence layer and ClinGen concordance benchmark; RecSys_OBD's ground-truthed OPE estimator benchmark; chromosome-held-out CV in cLFR_VCpolish |
+| Observability blindness | Failures are hard to debug without traces, metrics, and lineage | MLOps Taxi monitoring stack; LFR drift feature matrices; Prometheus metrics in AgenticGEM; denovo_OLC's shadow-model disagreement monitoring |
 | Context degradation | Long sessions and poor retrieval cause agents to reason from weak context | FAISS grounding, knowledge graph context, progressive literature search |
 | Human-in-the-loop design | Agents either over-ask humans or continue when they should stop | Quality thresholds, revise/stop logic, escalation decisions |
-| Production drift | ML tools degrade when input distributions shift | LFR DataMonitor, DeepVariant fine-tuning, AgenticGEM retraining loop, ZeroShot drift metrics |
+| Production drift | ML tools degrade when input distributions shift | LFR DataMonitor, DeepVariant fine-tuning, AgenticGEM retraining loop, ZeroShot drift metrics, denovo_OLC's explicit drift-gated retraining workflow |
 
 ---
 
@@ -79,6 +83,8 @@ flowchart TD
         LFR["LFR Data Monitor<br/>QC · drift detection · feature matrices"]
         DV["DeepVariant Fine-Tuning<br/>transfer learning · GIAB validation"]
         IMM["ZeroShot Immune Feature Drift<br/>foundation model embeddings · longitudinal drift"]
+        OLC["denovo_OLC<br/>per-UMI OLC assembly · shadow GBDT monitor"]
+        VCP["cLFR_VCpolish<br/>molecule-linkage confidence · canary polish"]
     end
 
     subgraph AGENT["Agentic AI Layer"]
@@ -92,6 +98,7 @@ flowchart TD
     subgraph MLOPS["Production MLOps Layer"]
         TAXI["MLOps Taxi<br/>TFX · Feast · MLflow · Kafka · Prometheus · Kubernetes"]
         RECSYS["Movie RecSys<br/>offline / nearline / online serving"]
+        OBD["RecSys_OBD<br/>OPE estimator benchmark · position-bias correction"]
         OBS["Observability<br/>metrics · logs · drift reports · alerts"]
     end
 
@@ -101,9 +108,12 @@ flowchart TD
     WGS --> IMM
     CUR --> EVAL
     CUR --> BIO
+    OLC --> OBS
+    VCP --> OBS
     GEM --> OBS
     TAXI --> OBS
-    RECSYS --> OBS
+    RECSYS --> OBD
+    OBD -- "ship decision" --> OBS
     GRAG --> RECSYS
     OBS --> GEM
 ```
@@ -128,6 +138,8 @@ The biomedical projects show that I understand production constraints before add
 - **LFR Data Monitor** turns sequencing QC into an ML monitoring problem by extracting per-run features and detecting distribution shifts before they affect downstream calling quality.
 - **Google DeepVariant Fine-Tuning** closes the loop by adapting pretrained DeepVariant models to shifted sequencing distributions using transfer learning and GIAB-based validation.
 - **ZeroShot Immune Feature Drift** extends the same drift mindset to foundation model embeddings, tracking immune aging signals without overfitting small biological datasets.
+- **denovo_OLC** assembles linked-read isoform pools with a graph-aware ML prefilter, then documents six separate attempts to let a model choose the final contig — all rejected for the same failure mode — before shipping a cheaper, auditable rule as the production default and demoting the model to a shadow-only monitor.
+- **cLFR_VCpolish** trains a molecule-linkage confidence model with chromosome-held-out cross-validation on two independent GIAB samples, ships it disabled-by-default as a canary, and documents rather than silently patches the chromosomes where the feature set underperforms.
 
 Together, these projects represent the production substrate: data quality, model quality, reproducibility, drift awareness, and validation.
 
@@ -135,7 +147,7 @@ Together, these projects represent the production substrate: data quality, model
 
 The agentic biomedical projects focus on constrained automation rather than unconstrained chat.
 
-- **PhasedVariants AgenticCurator** automates interpretation of phased variants using RAG, PrimeKG, VEP annotations, literature retrieval, FAISS grounding, and dual-agent review.
+- **PhasedVariants AgenticCurator** automates interpretation of phased variants using RAG, PrimeKG, VEP annotations, literature retrieval, and FAISS grounding, orchestrated by a three-agent sprint harness (Planner → Generator ↔ Evaluator) that negotiates deliverables before generating and routes correctness checks to sources outside the model's own loop — objective citation audits and a frozen ClinGen/ClinVar gold set — after finding the generator's self-reported citations were unresolvable. A 600-task concordance benchmark across two models found both share a structural failure at separating ClinGen's Moderate/Disputed/Refuted tiers, so the architecture now has the LLM extract evidence while a deterministic scoring engine computes the classification.
 - **AgenticEval** abstracts the evaluation layer from AgenticCurator into a reusable framework. Any agent trace—from LangGraph, CrewAI, or custom Python loops—can be scored for tool accuracy, hallucination rate, stop-decision quality, and a five-dimension rubric, enabling CI-gated regression testing across projects.
 - **Agentic bioArchitect** uses multi-agent collaboration to design and implement bioinformatics pipelines, with reviewer agents and score thresholds controlling whether the workflow proceeds or iterates.
 
@@ -149,6 +161,7 @@ The recommendation and MLOps projects show that the same production principles t
 - **AgenticGEM DataDrift AutoRetrainer** applies agentic decision-making to production ads ranking: a LangGraph state machine evaluates drift reports and decides whether to retrain, skip, or escalate.
 - **RS ColdStart GraphRAG LLM** uses multimodal retrieval and graph reasoning to solve cold-start recommendation problems.
 - **Movie RecSys** demonstrates offline, nearline, and online recommendation serving with hybrid ranking and fallbacks.
+- **RecSys_OBD** benchmarks six off-policy evaluation estimators against verified ground truth on a real e-commerce logging dataset, finding a bias-variance crossover that yields a data-scale-dependent estimator selection rule, and uses a ground-truthed synthetic stress test to establish exactly when position-bias correction helps versus adds noise — the evaluation discipline a ranking policy needs before it ships.
 
 These projects make the portfolio broader than biomedicine while preserving the same core thesis: production AI requires lifecycle engineering, not isolated models.
 
@@ -161,6 +174,7 @@ These projects make the portfolio broader than biomedicine while preserving the 
 - Deep familiarity with sequencing workflows, variant calling, phasing, QC, drift, and clinical interpretation.
 - Ability to connect ML systems to domain-specific failure modes rather than treating data as generic tables.
 - Experience translating research-grade models into monitored, auditable workflows.
+- Rigorous production-ML evaluation discipline: chromosome-held-out cross-validation, calibration, shadow/canary deployment, and disclosing rather than silently patching anomalous results.
 
 ### For Agentic AI Roles
 
