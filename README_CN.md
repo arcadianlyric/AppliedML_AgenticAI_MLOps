@@ -14,10 +14,25 @@
 
 ![Portfolio Overview](img/readme.png)
 
-## 两个核心信号
+## 三个核心信号
 
 1. **实现了生产式 agentic 闭环**：monitor -> evaluate -> decide -> act -> validate。这个闭环体现在 biomedical variant interpretation、生信 pipeline 设计、测序漂移响应，以及 ads-ranking 自动再训练中。
 2. **面向 agentic 稳定性设计**：这些项目不是只展示 agent 能调用工具，而是直接处理 agent 难以部署的稳定性痛点，尤其是多步错误累积、工具调用不可靠、评估缺口、上下文退化、可观测性不足和自动化失控。
+3. **产品级判断力**：每个项目都从明确的问题/痛点定义出发，而不是先有方案再找场景；架构上的取舍都被显式论证，而不是默认"哪里都加个 agent"；任何看起来是正面结果的发现，都被当作待压力测试的假设，而不是可以直接上线的结论。
+
+---
+
+## 架构、需求洞察与批判性思维
+
+Agent 现在已经能"快速交付"——重构一段代码、重调一个 pipeline、跑一遍并报告指标有没有变好——而这种速度正在快速商品化：让 agent 对着一个目标跑一遍、拿到一个答案，已经不再是区分一个人和另一个人的地方。Agent 自己给不了的东西，在这个速度的**上游和下游**：先判断这个系统到底该优化什么，而不是接受它给出的第一个指标；以及识别一个跑得快、看起来很自信的结果什么时候其实是错的。这正是一个优秀 PM 或资深科学家在评审 roadmap 时所依赖的判断力——而这个 portfolio 是直接把它做出来给你看，而不是停留在自我宣称：
+
+| 能力 | 在这个 Portfolio 里的体现 | 证据 |
+|---|---|---|
+| **需求洞察 / 定义该优化什么** | 每个项目都先判断系统到底该优化什么，而不是接受摆在面前的第一个指标——从明确的痛点或未解决问题出发，而不是先有方案再找场景；一旦发现原有设计答不了真正的问题，就会重新定义范围 | BioMed portfolio 的 7 个企业级 agentic AI 痛点框架；RecSys_OBD 提出的"让 OPE 在实践中变难的两个开放问题"；PhasedVariants Step 4 发现"生成器和评估器共享同一个模型家族和 prompt 谱系，因此这个循环内部产出的任何数字都无法自证"——这个发现直接触发了架构重设计，把正确性校验路由到外部信源 |
+| **架构与取舍设计** | 对确定性规则、ML、LLM 判断各自该用在哪里，做出经过论证的主动选择，而不是默认"到处加 agent" | PhasedVariants 的"混合规则+Agentic"架构论证表；denovo_OLC 的分级证据阶梯（快速路径 → 锚点延伸 → 集体救援，只在必要时才升级）及其评估过的三种 ML 集成方案；下方 Integrated System View 图——把两个领域、12 个项目组合成一套完整的生产生命周期 |
+| **批判性思维 / 识别 agent 自信但错的情况** | 一个跑得快、看起来很自信的结果——无论是模型还是 agent 跑一遍给出来的——在被信任之前都会先被压力测试，而不是因为它自己报出来的数字好看就直接上线；负面和证伪性的发现会被公开并反过来影响最终设计，而不是被搁置不提 | denovo_OLC 六条被否决的"让模型直接介入决策"路径，其中一个分类器 AUC 高达 0.9995，却是预测了错误的目标且判别方向相反——一个教科书级的"自信但错"案例；cLFR_VCpolish 公开了 chr15/chr19 异常，并否决了一个能改善单条染色体、却让全基因组结果净变差的"修复方案"；RecSys_OBD 的因果边界测试证明一个看似正当的偏差修正也可能让误差变大；PhasedVariants 的一致性基准测试表明"修订有帮助"和"修订有害"在不同模型上都成立——只跑单一模型会得出错误的普适性结论 |
+
+这些不是无关紧要的旁注——它们是系统上线后仍能保持诚实所需要的纪律，也正是 demo 和产品的分界线。
 
 ---
 
@@ -42,6 +57,35 @@ Domain data -> ML pipeline -> monitoring -> drift decision -> retraining / fallb
 
 ---
 
+## 与 AI 加速药物研发 / 精准医疗的契合度
+
+关于"AI 加速药物研发"的报道通常把至少三种不同机制混在一起：生成式结构/分子设计（AlphaFold、基于扩散模型的蛋白设计）、LLM 辅助的文献与组学数据解读（用于靶点发现）、以及支撑这些模型的生信 pipeline 的 agentic 自动化。这个 portfolio 的生物医学工作落在第二层和第三层，以及两者都依赖的数据可靠性层——不涉及分子/化学设计或临床试验运营。这是有意为之的范围边界，而不是缺口。
+
+| AI 加速药物研发/精准医疗 pipeline 中的层级 | 行业报告中的已知局限 | Portfolio 证据 |
+|---|---|---|
+| **可靠的基因组/组学数据底座** | 测序通量已超过分析能力，数据质量而非模型能力，是下游靶点发现和解读模型的报告瓶颈 | LFR Data Monitor（在进入 variant calling 前检测 QC 漂移）；DeepVariant fine-tuning（分布漂移下的 detect → retrain → validate）；DNBSEQ WGS Pipeline（可审计、可复现的 calling） |
+| **证据锚定的靶点/变异解读** | 关于 LLM 在药物发现中应用的综述指出，纯文本的 LLM 输出流畅，但"在缺乏队列特异定量证据支撑时，不足以用于靶点和药物优先级排序" | PhasedVariants AgenticCurator 在发现生成器自报引用完全无法解析后，把正确性校验路由到外部结构化信源（ClinGen/ClinVar），而非依赖模型自报——这正是文献指出应有的修复方式 |
+| **生信 pipeline 的 agentic 自动化** | "Agentic bioinformatics" 被行业文献描述为新兴范式，但公开的生产级案例仍然很少 | Agentic bioArchitect（reviewer 门控迭代的多智能体 pipeline 设计）；denovo_OLC 的证据阶梯（只在便宜规则不够用时才升级到模型） |
+
+这也正是基因组学/诊断类公司（如 Natera、Tempus）和以功能基因组学为起点的药物发现公司（如 Recursion、Insitro）投入工程精力最多的层级——比起声称在做分子设计或临床试验模拟，这更贴近这些项目实际在做的事情。
+
+---
+
+## 与 AI4S（AI for Science）现状痛点的对应
+
+2026 年的 AI4S 讨论中，一个共识正在浮现：agent 能"跑完"一个分析流程，不等于它给出的结论可信——这正是这个 portfolio 从设计之初就采用的框架，而不是事后补的免责声明。
+
+| AI4S 现状痛点（2026 年行业/学界报告） | Portfolio 证据 |
+|---|---|
+| 2026 年中一项针对 agentic bioinformatics 的基准测试发现：主要失败模式是 **planning error**（用错参考基因组、忽略研究设计、选错统计方法、对结果的置信度超过证据支持），而非执行错误——一个"跑完了"的 workflow 仍可能给出不可靠的生物学结论 | denovo_OLC 记录的六条被否决的"模型直接决策"路径，其中一个 AUC 0.9995 的分类器预测了错误目标——正是"跑得漂亮但结论错"的教科书案例；PhasedVariants AgenticCurator 发现生成器自报引用完全无法解析后，把正确性判定移出模型自身循环，路由到外部 ClinGen/ClinVar 证据源 |
+| Reproducibility 文献指出：未被记录的基因组版本、注释版本、工具版本会制造"假的"结果差异；measurement-to-dataset pipeline 本身应被当作可审计的 inference component，而不是黑箱预处理步骤 | DNBSEQ Complete WGS Pipeline 的容器化、可配置 caller/aligner 设计保证可复现性；LFR Data Monitor 的 per-run feature matrix 把测序 QC 变成可追踪的监控问题；cLFR_VCpolish 按染色体留出交叉验证，并如实公开 chr15/chr19 的异常表现，而非静默调参掩盖 |
+| 学界普遍指出：AI4S 的数据驱动模型缺乏传统科学计算的正确性保证，可能在真实场景中给出误导性结论；同时科研体系本身的自我纠错能力正被质疑（retraction 与复现失败增多） | 贯穿全 portfolio 的"负面/证伪发现照常公开"纪律——RecSys_OBD 的因果边界测试证伪一个看似合理的偏差修正；AgenticRL 证伪"日志信号越丰富策略越好"这一直觉假设；denovo_OLC 与 cLFR_VCpolish 对异常结果选择公开而非掩盖 |
+| Foundation model 在 chemistry/biology/materials 中的生成式应用（分子设计、蛋白结构预测）面临独特的可信度与物理一致性挑战，是当前 AI4S 投入最集中但也最难验证的方向之一 | 不在这个 portfolio 的范围内——这里的工作聚焦证据锚定的解读与生信 pipeline 自动化验证，而非分子/结构生成，是有意为之的范围边界（与上面"AI 加速药物研发"一节的结论一致） |
+
+换句话说，这个 portfolio 已经在正面回应 2026 年 AI4S 领域被反复提及的核心痛点：agent 完成了流程不代表结论可信；可审计性、外部证据校验，以及诚实地公开负面结果，才是当前 agentic AI4S 系统最缺、也最难量产的能力。
+
+---
+
 ## Factor 覆盖矩阵
 
 | 项目 | Biomedical | Agentic AI | MLOps / Production ML | 核心能力信号 |
@@ -60,6 +104,8 @@ Domain data -> ML pipeline -> monitoring -> drift decision -> retraining / fallb
 | [RS ColdStart GraphRAG LLM](https://github.com/arcadianlyric/RS_coldstart_graphRAG_LLM) |  | Yes | Yes | 多模态 GraphRAG 解决冷启动推荐问题 |
 | [Movie RecSys](https://github.com/arcadianlyric/RS_movies) |  |  | Yes | offline / nearline / online 三层推荐服务架构 |
 | [RecSys_OBD](https://github.com/arcadianlyric/RecSys_OBD) |  |  | Yes | 离线策略评估（OPE）基准测试：按数据规模选择估计器，并为位置偏差修正给出可证伪的因果边界 |
+| [AgenticRL](https://github.com/arcadianlyric/AgenticRL) |  |  | Yes | 在真实 logged bandit 数据上训练离线 RL（Conservative Q-Learning），复用 RecSys_OBD 自己的 OPE pipeline 做验证——实测 CQL 的保守惩罚设计目标是否真的成立，并证伪了"日志信号越丰富策略越好"这一假设 |
+| [RecSys_ABtest](https://github.com/arcadianlyric/RecSys_ABtest) |  | Yes | Yes | A/B 分析工具箱（power/CUPED/SRM/sequential testing）+ uplift/CATE 定向投放，由一个消融阶梯式 LLM agent 对照构造陷阱 ground truth 做上线判断收尾 |
 
 ---
 
@@ -68,11 +114,11 @@ Domain data -> ML pipeline -> monitoring -> drift decision -> retraining / fallb
 | 问题 | 为什么会影响生产部署 | 项目证据 |
 |---|---|---|
 | 多步错误累积 | 单步 95% 准确率在长链路中会快速下降 | AgenticCurator review loop；bioArchitect researcher -> analyst -> reviewer 流程 |
-| 工具调用不可靠 | Agent 可能 hallucinate 参数、调用顺序错误、或忽略 silent failure | 结构化 tool wrapper、显式 tool output、cross-model review |
-| 评估缺口 | 没有质量指标就无法稳定部署 agent | **AgenticEval** 确定性 trace 评估框架；AgenticCurator 的外部证据评估层与 ClinGen 一致性基准；RecSys_OBD 带 ground truth 的 OPE 估计器基准；cLFR_VCpolish 的按染色体留出交叉验证 |
+| 工具调用不可靠 | Agent 可能 hallucinate 参数、调用顺序错误、或忽略 silent failure | 结构化 tool wrapper、显式 tool output、cross-model review；**RecSys_ABtest** 的确定性 function-calling 层——agent 只能通过 tool call 获取数字，永远不能自己算 |
+| 评估缺口 | 没有质量指标就无法稳定部署 agent | **AgenticEval** 确定性 trace 评估框架；AgenticCurator 的外部证据评估层与 ClinGen 一致性基准；RecSys_OBD 带 ground truth 的 OPE 估计器基准；cLFR_VCpolish 的按染色体留出交叉验证；**RecSys_ABtest** 基于 10 类构造陷阱 ground truth 的上线决策基准（100% 陷阱召回率，加入 tool-calling 后数值幻觉率 0%）；**AgenticRL** 对 CQL 保守惩罚设计目标的实测验证——把一次 8 倍的离线 RL 高估失效压缩到与 ground truth 相差 2.2% |
 | 可观测性缺失 | 无法追踪长流程中是哪一步造成失败 | MLOps Taxi monitoring stack；LFR drift feature matrix；AgenticGEM Prometheus metrics；denovo_OLC 的影子模型分歧率监控 |
 | 上下文退化 | 长会话和弱检索会让 agent 基于错误 context 推理 | FAISS grounding、knowledge graph context、progressive literature search |
-| Human-in-the-loop 设计 | Agent 既不能过度打扰人，也不能在该停止时继续自动化 | 质量阈值、revise/stop 逻辑、escalation decision |
+| Human-in-the-loop 设计 | Agent 既不能过度打扰人，也不能在该停止时继续自动化 | 质量阈值、revise/stop 逻辑、escalation decision；**RecSys_ABtest** 的 A0->A3 消融阶梯，由第二个模型担任 skeptical verifier 把关上线/升级决策 |
 | 生产漂移 | 输入分布变化会让 ML 工具静默退化 | LFR DataMonitor、DeepVariant fine-tuning、AgenticGEM retraining loop、ZeroShot drift metrics、denovo_OLC 显式的漂移触发再训练流程 |
 
 ---
@@ -96,12 +142,15 @@ flowchart TD
         BIO["Agentic bioArchitect<br/>research agents · reviewer agents · Snakemake generation"]
         GEM["AgenticGEM<br/>LangGraph drift monitor -> evaluator -> retrainer"]
         GRAG["ColdStart GraphRAG<br/>multimodal retrieval · graph reasoning"]
+        ABT["RecSys_ABtest Part C<br/>A0->A3 agentic 上线决策分析师 · citation-audit 方法论"]
     end
 
     subgraph MLOPS["Production MLOps Layer"]
         TAXI["MLOps Taxi<br/>TFX · Feast · MLflow · Kafka · Prometheus · Kubernetes"]
         RECSYS["Movie RecSys<br/>offline / nearline / online serving"]
         OBD["RecSys_OBD<br/>OPE estimator benchmark · position-bias correction"]
+        RL["AgenticRL<br/>offline CQL / reward-model policy · OPE 验证价值"]
+        ABAB["RecSys_ABtest Part A/B<br/>power/CUPED/SRM/sequential · uplift-CATE 定向"]
         OBS["Observability<br/>metrics · logs · drift reports · alerts"]
     end
 
@@ -111,12 +160,16 @@ flowchart TD
     WGS --> IMM
     CUR --> EVAL
     CUR --> BIO
+    CUR -. "citation-audit 方法论迁移" .-> ABT
     OLC --> OBS
     VCP --> OBS
     GEM --> OBS
     TAXI --> OBS
     RECSYS --> OBD
-    OBD -- "上线决策" --> OBS
+    OBD -- "复用 OPE 基础设施" --> RL
+    RL -- "OPE 说可以上" --> ABAB
+    ABAB --> ABT
+    ABT -- "上线决策" --> OBS
     GRAG --> RECSYS
     OBS --> GEM
 ```
@@ -165,6 +218,10 @@ flowchart TD
 - **RS ColdStart GraphRAG LLM**：用 multimodal retrieval 和 graph reasoning 解决推荐系统中的 cold-start 问题。
 - **Movie RecSys**：展示 offline、nearline、online 三层推荐服务架构，以及 hybrid ranking 和 fallback 设计。
 - **RecSys_OBD**：在一个真实电商日志数据集上，用可验证的 ground truth 对六种离线策略评估（OPE）估计器做基准测试，发现的偏差-方差交叉点给出了按数据规模选择估计器的实用规则；并用一个带 ground truth 的合成压力测试，精确界定位置偏差修正何时有效、何时只是引入噪声——这正是一个排序策略上线前所需要的评估纪律。
+- **AgenticRL**：直接在 OBD 真实 logged transitions 上训练离线 RL（Conservative Q-Learning）和 reward-model 策略，再原样复用 RecSys_OBD 自己的 OPE 估计器，在没有任何线上曝光的前提下给每个策略的价值定价、对照 ground truth 校验。实测结果：CQL 的保守惩罚在 `random` 日志上把一次 8 倍的离线 RL 高估失效压缩到与 ground truth 仅相差 2.2%；但紧接着的自然假设——更丰富的自适应日志（`bts`）应该能训出更好的策略——被证伪了：`bts` 的集中曝光违反了 positivity/overlap 假设，让每一个估计器的表现都变差，而不是变好。
+- **RecSys_ABtest**：在 OPE 判断"这个策略值得一试"之后接棒收尾——A/B 分析工具箱（power/MDE、CUPED、SRM、sequential testing、delta method）负责线上验证 lift 是否真实，S/T/X-learner uplift 建模负责找出该给谁上；并且复用 PhasedVariants AgenticCurator 的 citation-audit 方法论，做出一个消融阶梯式的 agentic 实验分析师（A0 裸数字 → A3 tool-calling + 结构化 planning + skeptical verifier），对照 10 类构造陷阱 ground truth 判断一份实验读数是否可信到可以上线（100% 陷阱召回率，A1 起数值幻觉率即为 0%）。
+
+**RecSys_OBD、AgenticRL、RecSys_ABtest 三者构成一条完整闭环**——一条 *RecSys Decision Intelligence Pipeline*，与生物医学项目里的 monitor → retrain → validate 闭环遥相呼应，只是把对象从 variant call 换成了排序/广告决策：RecSys_OBD 搭建并验证 OPE 基础设施；AgenticRL 离线训练新策略，并用同一套基础设施为它定价；RecSys_ABtest 在线上验证结果，并给出是否该上线的 agentic 判断。
 
 这些项目让 portfolio 不局限于生物医学，同时保持同一个核心观点：生产 AI 是生命周期工程，不是单个模型或单个 agent。
 
@@ -184,12 +241,14 @@ flowchart TD
 - 设计过包含 planning、retrieval、tool use、reflection、evaluator agent 和 quality gate 的 agent 系统。
 - 理解 agent 的真实失败模式：hallucination、context decay、tool-call error、多步错误累积。
 - 能围绕显式 state、证据、评分和 escalation 设计 agentic workflow。
+- 跨领域方法论复用：RecSys_ABtest 把 PhasedVariants AgenticCurator 的 citation-audit 设计移植成统计归因审计，其 A0→A3 消融阶梯让数值幻觉率在加入 tool-calling 后降到 0%。
 
 ### 面向 MLOps / Production ML 岗位
 
 - 覆盖完整生产生命周期：ingestion、validation、feature engineering、training、registry、serving、monitoring、drift detection、retraining。
 - 熟悉 TFX、Feast、MLflow、Kafka、Redis、FastAPI、Docker、Kubernetes、Prometheus、Grafana、DVC 等生产组件。
 - 能构建 feedback loop，让模型行为被度量、被解释、被触发行动并持续改进。
+- 离线到线上的决策闭环：RecSys_OBD 的 OPE 基础设施被 AgenticRL 原样复用，在没有任何线上曝光前给离线 RL 策略定价，再由 RecSys_ABtest 的 A/B 验证和 uplift 定向收尾。
 
 ---
 
@@ -200,3 +259,5 @@ flowchart TD
 在 biomedical ML 中，我理解模型质量不仅取决于算法，还取决于测序 chemistry、QC、variant representation 和临床证据链。在 agentic AI 中，我理解自动化必须是 grounded、evaluated、observable、interruptible 的。在 MLOps 中，我理解部署不是终点，而是 monitor、detect drift、retrain、validate、serve、audit 的持续生命周期。
 
 这个组合让我能够设计的不只是好看的 agent demo，而是更接近真实生产环境的 agentic AI 应用。
+
+当 AI 越来越能自己写代码，真正拉开差距的能力正在转向：定义对的问题、架构出真正能扛住生产环境的系统，以及分辨一个结果是真的可信还是只是看起来可信。这正是这个 portfolio 想要证明的判断力。
